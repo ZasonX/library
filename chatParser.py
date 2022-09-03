@@ -29,7 +29,6 @@ from os.path import isfile
     Configs
 '''
 # target folder (workspace)
-import sys
 
 
 class Const(object):
@@ -65,88 +64,144 @@ consts = Const()
 '''
 DICT_json_files = {}
 DICT_markdown_files = {}
+DICT_yaml_files = {}
 
 '''
     Functions
 '''
 
 
-def dump_into_yaml_file(data, file):
+def dump_into_yaml_file(folder_path, file_name):
     """
     Convert a python object into yaml
 
     Args:
-        data (any): python objected data
-        file (string): file name with full path
+        folder_path (string): base folder path
+        file_name (string): name of file with the path
 
     """
-    # bonus, convert json into yaml
-    with open(file, 'w') as f:
+    json_file = folder_path / (file_name + ".json")
+
+    with open(json_file, "r", encoding="utf-8") as f:
+        # load json file into a python object
+        data = json.load(f)
+
+    yaml_file_path = folder_path / "out"
+    yaml_file = yaml_file_path / (file_name + ".yaml")
+    with open(yaml_file, 'w') as f:
         yaml.dump(data, f)
 
 
 def translate_to_markdown(folder_path, file_name):
+    """
+    translate chat json file into a markdown file for human to read
+
+    Args:
+        folder_path (string): base folder path
+        file_name (string): name of file with the path
+
+    """
     json_file = folder_path / (file_name + ".json")
-    print(json_file)
-    f = open(json_file, "r", encoding="utf-8")
+    with open(json_file, "r", encoding="utf-8") as f:
+        # load json file into a python object
+        data = json.load(f)
 
-    # returns JSON object as a dictionary
-    data = json.load(f)
-
-    # Close reading file
-    f.close()
+    # 準備寫入
     markdown_file_path = folder_path / "out"
     markdown_file = markdown_file_path / (file_name + ".md")
-    f = open(markdown_file, "w", encoding="utf-8")
+    with open(markdown_file, "w", encoding="utf-8") as f:
+        # data['emotes']
+        # Iterating through the json
+        # list
+        for row in data['comments']:
+            """
+                一行一行的聊天訊息
+            """
+            # 時間戳記
+            offset_seconds = row['content_offset_seconds']
+            timeStamp = time.strftime('%H:%M:%S', time.gmtime(offset_seconds))
+            f.write(f' {timeStamp} ')
 
-    # Iterating through the json
-    # list
-    for row in data['comments']:
-        offset_seconds = row['content_offset_seconds']
-        timeStamp = time.strftime('%H:%M:%S', time.gmtime(offset_seconds))
+            # 使用者名稱
+            name = row['commenter']['display_name']
+            user_color = row['message']['user_color']
+            f.write(f'<span style="color:{user_color}">{name}</span>: ')
 
-        name = row['commenter']['display_name']
-        msg = row['message']['body'].replace("*", "\*")
-        user_color = row['message']['user_color']
-        # f.write(f'[{timeStamp}][{name}]: {msg}')
-        f.write(f' {timeStamp} ')
-        f.write(f'<span style="color:{user_color}">{name}</span>: {msg}')
-        f.write('  \n')
+            if data['emotes']:
+                for fragment in row['message']['fragments']:
+                    if fragment['emoticon']:
+                        emoticon_id = fragment['emoticon']['emoticon_id']
 
-    f.close()
+                        img_data_in_firstParty = [img["data"] for img in data['emotes']
+                                                  ['firstParty'] if img["id"] == emoticon_id]
+                        img_data_in_thirdParty = [img["data"] for img in data['emotes']
+                                                  ['thirdParty'] if img["id"] == emoticon_id]
 
-    # bonus, dump into a yaml file
-    yaml_file_path = folder_path / "out"
-    yaml_file = yaml_file_path / (file_name + ".yaml")
-    dump_into_yaml_file(data, yaml_file)
+                        image_data = img_data_in_firstParty[0] if img_data_in_firstParty[0] else img_data_in_thirdParty[0]
+
+                        message = "![](data:image/png;base64,%s)" % image_data
+                        f.write(message)
+                    else:
+                        message = fragment['text']
+                        message = message.replace("*", "\*")
+                        message = message.replace("~", "\~")
+                        message = message.replace("_", "\_")
+                        f.write(message)
+            else:
+                message = row['message']['body']
+                message = message.replace("*", "\*")
+                message = message.replace("~", "\~")
+                message = message.replace("_", "\_")
+                f.write(message)
+
+            f.write('  \n')
 
 
 '''
     Main Code
 '''
+print('program start ...\n')
 # src
 # JSON files
 for file_name in listdir(consts.FOLDER_PATH):
     file = consts.FOLDER_PATH / file_name
     if isfile(file):
         if file_name[-5:] == ".json":
-            print(file)
             DICT_json_files[file_name[:-5]] = True
 
 # dst
-# markdown outputs
 src_folder = consts.FOLDER_PATH / "out"
 for file_name in listdir(src_folder):
-    file = consts.FOLDER_PATH / file_name
+    file = src_folder / file_name
     if isfile(file):
+        # print(f'checking for {file_name} ...\n')
+        # markdown outputs
+        # print('markdown file ...')
         if file_name[-3:] == ".md":
+            # print('check!')
             DICT_markdown_files[file_name[:-3]] = True
+        # else:
+            # print('missing :(')
+        # print(f'\n')
+
+        # yaml outputs
+        # print('yaml file ...')
+        if file_name[-5:] == ".yaml":
+            # print('check!')
+            DICT_yaml_files[file_name[:-5]] = True
+        # else:
+            # print('missing :(')
+        # print(f'\n')
 
 # generate output files
 for file_name in DICT_json_files:
     if file_name not in DICT_markdown_files:
-        print(f'generating files: {file_name} ....')
+        print(f'generating markdown files: {file_name} ....')
         translate_to_markdown(consts.FOLDER_PATH, file_name)
+        print(f'done\n')
+    if file_name not in DICT_yaml_files:
+        print(f'generating yaml files: {file_name} ....')
+        dump_into_yaml_file(consts.FOLDER_PATH, file_name)
         print(f'done\n')
 
 print('finish\n')
