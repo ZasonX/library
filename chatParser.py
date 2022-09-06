@@ -1,3 +1,5 @@
+
+# TODO GUI 介面
 # # First things, first. Import the wxPython package.
 # import wx
 
@@ -24,6 +26,21 @@ import json
 import time
 from os import listdir
 from os.path import isfile
+
+#TODO: badge
+# alg:
+# 建立 global badge 圖庫
+# 使用前維護圖庫
+# 圖庫另存
+# 建立 實況主 頻道圖庫
+# 同上
+# 建立 markdown 時可將 data:image/png;改為讀取圖庫
+# https://badges.twitch.tv/v1/badges/global/display
+# "https://badges.twitch.tv/v1/badges/channels/{streamerId}/display"
+# import base64
+# import requests
+# def get_as_base64(url):
+#     return base64.b64encode(requests.get(url).content)
 
 '''
     Configs
