@@ -128,25 +128,33 @@ def translate_to_markdown(folder_path, file_name):
             f.write(f'<span style="color:{user_color}">{name}</span>: ')
 
             if data['emotes']:
-                for fragment in row['message']['fragments']:
-                    if fragment['emoticon']:
-                        emoticon_id = fragment['emoticon']['emoticon_id']
+                if row['message']['fragments']:
+                    for fragment in row['message']['fragments']:
+                        if fragment['emoticon']:
+                            emoticon_id = fragment['emoticon']['emoticon_id']
 
-                        img_data_in_firstParty = [img["data"] for img in data['emotes']
-                                                  ['firstParty'] if img["id"] == emoticon_id]
-                        img_data_in_thirdParty = [img["data"] for img in data['emotes']
-                                                  ['thirdParty'] if img["id"] == emoticon_id]
+                            img_data_in_firstParty = [img["data"] for img in data['emotes']
+                                                      ['firstParty'] if img["id"] == emoticon_id]
+                            img_data_in_thirdParty = [img["data"] for img in data['emotes']
+                                                      ['thirdParty'] if img["id"] == emoticon_id]
 
-                        image_data = img_data_in_firstParty[0] if img_data_in_firstParty[0] else img_data_in_thirdParty[0]
+                            image_data = img_data_in_firstParty[0] if img_data_in_firstParty[
+                                0] else img_data_in_thirdParty[0]
 
-                        message = "![](data:image/png;base64,%s)" % image_data
-                        f.write(message)
-                    else:
-                        message = fragment['text']
-                        message = message.replace("*", "\*")
-                        message = message.replace("~", "\~")
-                        message = message.replace("_", "\_")
-                        f.write(message)
+                            message = "![](data:image/png;base64,%s)" % image_data
+                            f.write(message)
+                        else:
+                            message = fragment['text']
+                            message = message.replace("*", "\*")
+                            message = message.replace("~", "\~")
+                            message = message.replace("_", "\_")
+                            f.write(message)
+                else:
+                    message = row['message']['body']
+                    message = message.replace("*", "\*")
+                    message = message.replace("~", "\~")
+                    message = message.replace("_", "\_")
+                    f.write(message)
             else:
                 message = row['message']['body']
                 message = message.replace("*", "\*")
