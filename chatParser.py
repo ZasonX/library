@@ -144,15 +144,24 @@ def translate_to_markdown(folder_path, file_name):
             user_color = row['message']['user_color']
             f.write(f'<span style="color:{user_color}">{name}</span>: ')
 
-            if data['emotes']:
+            # since 1.51.1
+            # embeddedData instead of emotes
+            if data['embeddedData']:
+                emotes = data['embeddedData']
+            elif data['emotes']:
+                emotes = data['emotes']
+            else:
+                emotes = None
+
+            if emotes:
                 if row['message']['fragments']:
                     for fragment in row['message']['fragments']:
                         if fragment['emoticon']:
                             emoticon_id = fragment['emoticon']['emoticon_id']
 
-                            img_data_in_firstParty = [img["data"] for img in data['emotes']
+                            img_data_in_firstParty = [img["data"] for img in emotes
                                                       ['firstParty'] if img["id"] == emoticon_id]
-                            img_data_in_thirdParty = [img["data"] for img in data['emotes']
+                            img_data_in_thirdParty = [img["data"] for img in emotes
                                                       ['thirdParty'] if img["id"] == emoticon_id]
 
                             image_data = img_data_in_firstParty[0] if img_data_in_firstParty[
