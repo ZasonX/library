@@ -71,6 +71,25 @@ class Const(object):
     # constant variables
     # You can use os.path.abspath() to convert it:
     FOLDER_PATH = Path(r"C:\Users\Jason\Downloads\TwitchDownloader\chat")
+    ESCAPING_CHARACTERS = ['\\',
+                           '`',
+                           '*',
+                           '_',
+                           '{',
+                           '}',
+                           '[',
+                           ']',
+                           '<',
+                           '>',
+                           '(',
+                           ')',
+                           '#',
+                           '+',
+                           '-',
+                           '.',
+                           '!',
+                           '|',
+                           ]
 
 
 consts = Const()
@@ -171,21 +190,41 @@ def translate_to_markdown(folder_path, file_name):
                             f.write(message)
                         else:
                             message = fragment['text']
-                            message = message.replace("*", "\*")
-                            message = message.replace("~", "\~")
-                            message = message.replace("_", "\_")
+                            # message = message.replace("*", "\*")
+                            # message = message.replace("~", "\~")
+                            # message = message.replace("_", "\_")
+                            for character in consts.ESCAPING_CHARACTERS:
+                                if message.find(character) != -1:
+                                    message = message.replace(
+                                        character, "\\" + character)
+                            # message = (message.replace(
+                            #     character, "\\" + character) for character in consts.ESCAPING_CHARACTERS)
                             f.write(message)
                 else:
                     message = row['message']['body']
-                    message = message.replace("*", "\*")
-                    message = message.replace("~", "\~")
-                    message = message.replace("_", "\_")
+                    # message = message.replace("*", "\*")
+                    # message = message.replace("~", "\~")
+                    # message = message.replace("_", "\_")
+
+                    for character in consts.ESCAPING_CHARACTERS:
+                        if message.find(character) != -1:
+                            message = message.replace(
+                                character, "\\" + character)
+                    # message = (message.replace(
+                    #     character, "\\" + character) for character in consts.ESCAPING_CHARACTERS)
                     f.write(message)
             else:
                 message = row['message']['body']
-                message = message.replace("*", "\*")
-                message = message.replace("~", "\~")
-                message = message.replace("_", "\_")
+                # message = message.replace("*", "\*")
+                # message = message.replace("~", "\~")
+                # message = message.replace("_", "\_")
+
+                for character in consts.ESCAPING_CHARACTERS:
+                    if message.find(character) != -1:
+                        message = message.replace(
+                            character, "\\" + character)
+                # message = (message.replace(character, "\\" + character)
+                #            for character in consts.ESCAPING_CHARACTERS)
                 f.write(message)
 
             f.write('  \n')
