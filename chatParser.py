@@ -128,6 +128,20 @@ def dump_into_yaml_file(folder_path, file_name):
         yaml.dump(data, f)
 
 
+def write_message(fout, message):
+    # message = message.replace("*", "\*")
+    # message = message.replace("~", "\~")
+    # message = message.replace("_", "\_")
+    for character in consts.ESCAPING_CHARACTERS:
+        if message.find(character) != -1:
+            message = message.replace(
+                character, "\\" + character)
+    # message = (message.replace(
+    #     character, "\\" + character) for character in consts.ESCAPING_CHARACTERS)
+    fout.write(
+        f'<span style="font-size: 13px; font-family: Inter,Roobert,Helvetica Neue,Helvetica,Arial,sans-serif;">{message}</span>')
+
+
 def translate_to_markdown(folder_path, file_name):
     """
     translate chat json file into a markdown file for human to read
@@ -158,6 +172,25 @@ def translate_to_markdown(folder_path, file_name):
             timeStamp = time.strftime('%H:%M:%S', time.gmtime(offset_seconds))
             f.write(f' {timeStamp} ')
 
+            # user_badges
+            if data['embeddedData']:
+                if data['embeddedData']['twitchBadges']:
+                    # badges = {}
+                    # for item in data['embeddedData']['twitchBadges']:
+                    #     item_name = item['name']
+                    #     badges[item_name] = item
+                    badges = data['embeddedData']['twitchBadges']
+                    if row['message']['user_badges']:
+                        for user_badge in row['message']['user_badges']:
+                            user_badge_id = user_badge['_id']
+                            user_badge_version = user_badge['version']
+                            image_data = [badge["versions"][user_badge_version] for badge in badges
+                                          if badge["name"] == user_badge_id][0]
+                            # message = f'![](data:image/png;base64,{image_data}) '
+                            # message += '{ max-width: 100px } '
+                            message = f'<img src="data:image/png;base64,{image_data}" alt="badges" width="28"/> '
+                            f.write(message)
+
             # 使用者名稱
             name = row['commenter']['display_name']
             user_color = row['message']['user_color']
@@ -186,47 +219,18 @@ def translate_to_markdown(folder_path, file_name):
                             image_data = img_data_in_firstParty[0] if img_data_in_firstParty[
                                 0] else img_data_in_thirdParty[0]
 
-                            message = "![](data:image/png;base64,%s)" % image_data
+                            # message = "![](data:image/png;base64,%s)" % image_data
+                            message = f'<img src="data:image/png;base64,{image_data}" alt="emotes" width="28"/> '
                             f.write(message)
                         else:
                             message = fragment['text']
-                            # message = message.replace("*", "\*")
-                            # message = message.replace("~", "\~")
-                            # message = message.replace("_", "\_")
-                            for character in consts.ESCAPING_CHARACTERS:
-                                if message.find(character) != -1:
-                                    message = message.replace(
-                                        character, "\\" + character)
-                            # message = (message.replace(
-                            #     character, "\\" + character) for character in consts.ESCAPING_CHARACTERS)
-                            f.write(message)
+                            write_message(f, message)
                 else:
                     message = row['message']['body']
-                    # message = message.replace("*", "\*")
-                    # message = message.replace("~", "\~")
-                    # message = message.replace("_", "\_")
-
-                    for character in consts.ESCAPING_CHARACTERS:
-                        if message.find(character) != -1:
-                            message = message.replace(
-                                character, "\\" + character)
-                    # message = (message.replace(
-                    #     character, "\\" + character) for character in consts.ESCAPING_CHARACTERS)
-                    f.write(message)
+                    write_message(f, message)
             else:
                 message = row['message']['body']
-                # message = message.replace("*", "\*")
-                # message = message.replace("~", "\~")
-                # message = message.replace("_", "\_")
-
-                for character in consts.ESCAPING_CHARACTERS:
-                    if message.find(character) != -1:
-                        message = message.replace(
-                            character, "\\" + character)
-                # message = (message.replace(character, "\\" + character)
-                #            for character in consts.ESCAPING_CHARACTERS)
-                f.write(message)
-
+                write_message(f, message)
             f.write('  \n')
 
 
